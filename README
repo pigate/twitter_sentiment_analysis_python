@@ -1,0 +1,16 @@
+Still need to determine which state is the happiest.
+Going to start with...
+
+Dictionary of states (only 50 nodes. not too bad): (Sentiment Rating, tweet counts)
+
+If can determine state of the tweeter:
+  Determine sentiment of a tweet.
+  Update dictionary with tweet sentiment value (compute avg?)
+
+Flip out the dictionary such that
+  get new dict with 
+    sentiment rating: [state1, state2...]
+
+Our sentiment:state_array dict is in asc. order so,
+  we grab the last 10 or so and reverse this bunch
+  print out up to 10 of the states. --> happiest 10 states!
