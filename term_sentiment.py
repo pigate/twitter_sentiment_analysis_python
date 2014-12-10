@@ -1,5 +1,4 @@
-#python term_sentiment.py AFINN-111.txt tweet_file
-#writes results into results_term_sentiment.txt
+#python term_sentiment.py AFINN-111.txt tweet_file results.txt
 #must work for both live stream and not live stream
 
 import sys
@@ -133,7 +132,7 @@ def deriveTermSentiment(fp, op, dictp):
 def main():
     sent_file = open(sys.argv[1]) #AFIN
     tweet_file = open(sys.argv[2]) #output.txt
-    output_file = open("results_term_sentiment.txt", "w")
+    output_file = open(sys.argv[3], "w")
     output_file.truncate
     deriveTermSentiment(tweet_file, output_file, sent_file)
     

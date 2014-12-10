@@ -1,3 +1,25 @@
+twitter_sentiment_analysis_python
+=================================
+
+Analyze twitter data, calculate sentiment, etc. Works with live stream or twitter queries
+
+
+Included data sets:
+AFINN-111.txt   Dictionary of words with sentiment value
+output*.txt   Results of query of live twitter stream or simple twitter query. Can use to test if don't want to get your own sample data using twitterstream.py
+
+Code files:
+[x] twitterstream.py
+> Setup: set environment variables (TWITTER_API_KEY, TWITTER_API_SECRET, TWITTER_ACCESS_TOKEN_KEY, TWITTER_ACCESS_TOKEN_SECRET)
+*to run: python twitterstream.py > output.txt*
+[x] tweet_sentiment.py
+*to run: python tweet_sentiment.py AFINN-111.txt tweet_file.txt result.txt*
+[x] term_sentiment.py
+*to run: python term_sentiment.py AFINN-111.txt tweet_file result.txt*
+[x] frequency.py
+*to run: python frequency.py tweet_file result.txt*
+
+
 Still need to determine which state is the happiest.
 Going to start with...
 

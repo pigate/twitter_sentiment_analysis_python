@@ -1,8 +1,9 @@
 import sys
 import re
 import json
+
+#to run frequency.py tweet_file result.txt
 #works for both live stream data and non live data
-totalNumWords = 0
 
 #init
 #@params(element)
@@ -126,24 +127,6 @@ def fillFreqTree(tweetfile):
         totalNumWords += 1
         tree.insert(t) #either insert or update
   return tree
-
-
-
-#def fillHashtagFreqTree(tweetfile):
-#  tree = FreqTree()
-#  totalNumWords = 0
-#  for tweet_line in tweetfile:
-#    tweet_bundle = json.loads(tweet_line)
-#    if "statuses" in tweet_bundle:
-#      for status in tweet_bundle["statuses"]:
-#        if ("entities" in status):
-#          if ("hashtags" in status["entities"]):
-#            hashtags = [element["text"] for element in status["entities"]["hashtags"]]
-#            #do stuff to text
-#            for hashtag in hashtags:
-#              totalNumWords += 1
-#              tree.insert(hashtag) #either insert or update
-#  return tree
 
 def printOutput(tree, output_fp):
   tree.inOrderDFS(lambda node: output_fp.write("{0} {1}\n".format(node.value.encode('utf-8').strip(), float(node.count)/tree.totalCount)))

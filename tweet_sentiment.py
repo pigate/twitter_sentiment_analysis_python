@@ -1,7 +1,7 @@
 import json
 import sys
 
-#python tweet_sentiment.py AFINN-111.txt tweet_file.txt 
+#python tweet_sentiment.py AFINN-111.txt tweet_file.txt results.txt
 #writes results as sentiment rating per line in results.txt
 #must differentiate between twitter's live stream and not live stream.
 
@@ -18,7 +18,7 @@ def main():
     hw()
     sent_file.seek(0)
     tweet_file.seek(0)
-    results_file = open("results.txt", "w")
+    results_file = open(sys.argv[3], "w")
     analyzeTweets(sent_file, tweet_file, results_file)
     sent_file.close()
     tweet_file.close()
