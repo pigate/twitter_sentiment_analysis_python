@@ -2,7 +2,7 @@ import oauth2 as oauth
 import urllib2 as urllib
 import datetime
 import os
-import signal
+import multiprocessing
 
 api_key = os.environ["TWITTER_API_KEY"]
 api_secret = os.environ["TWITTER_API_SECRET"]
@@ -58,23 +58,20 @@ def fetchsamples(outfile):
   for line in response:
     outfile.write(line.strip())
 
-def timeout_handler(signum, frame):
-  raise Exception("timeout!")
-
 def fetch_timed_samples():
   curdatetime = datetime.datetime.now()
   fileName = str(curdatetime.year) + "_" + str(curdatetime.month) + "_" + str(curdatetime.day) + "_" + str(curdatetime.minute) + "_" + str(curdatetime.second) + "_output.txt"
 
   outfile = open(fileName, "w+")
+  p = multiprocessing.Process(target=fetchsamples, args=(outfile,))
+  p.start()
 
-  signal.signal(signal.SIGALRM, timeout_handler)
-  signal.alarm(10)
+  p.join(10)
+  if p.is_alive():
+    p.terminate()
+    p.join()
 
-  try:
-    fetchsamples(outfile)
-  except Exception, exc:
-    print exc
-    outfile.close()
+  outfile.close()
 
 if __name__ == '__main__':
   fetch_timed_samples()
