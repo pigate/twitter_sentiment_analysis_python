@@ -9,9 +9,9 @@ AFINN-111.txt   Dictionary of words with sentiment value
 output*.txt   Results of query of live twitter stream or simple twitter query. Can use to test if don't want to get your own sample data using twitterstream.py
 
 Code files:
-[x] twitterstream.py
+[x] get_stream.py
 > Setup: set environment variables (TWITTER_API_KEY, TWITTER_API_SECRET, TWITTER_ACCESS_TOKEN_KEY, TWITTER_ACCESS_TOKEN_SECRET)
-*to run: python twitterstream.py > output.txt*
+*to run: python get_stream.py #creates and writes output to file with name prepended by timestamp
 [x] tweet_sentiment.py
 *to run: python tweet_sentiment.py AFINN-111.txt tweet_file.txt result.txt*
 [x] term_sentiment.py
