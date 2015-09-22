@@ -56,8 +56,9 @@ def fetchsamples(outfile):
   parameters = []
   response = twitterreq(url, http_method, parameters)
   for line in response:
-    outfile.write(line.strip())
+    outfile.write(line.strip() + "\n")
 
+#when close process, incomplete write
 def fetch_timed_samples():
   curdatetime = datetime.datetime.now()
   fileName = str(curdatetime.year) + "_" + str(curdatetime.month) + "_" + str(curdatetime.day) + "_" + str(curdatetime.minute) + "_" + str(curdatetime.second) + "_output.txt"
@@ -66,10 +67,24 @@ def fetch_timed_samples():
   p = multiprocessing.Process(target=fetchsamples, args=(outfile,))
   p.start()
 
-  p.join(10)
+  p.join(5)
   if p.is_alive():
     p.terminate()
     p.join()
+
+  #remove last line (usually is incompletely written)
+  #move pointer to end
+  outfile.seek(0, os.SEEK_END)
+  #skip last char in file. if last line is null, delete it and the one before
+  pos = outfile.tell() - 1
+  while pos > 0 and outfile.read(1) != "\n":
+    pos -= 1
+    outfile.seek(pos, os.SEEK_SET)
+
+  #as long as not at start of file, delete all chars ahead
+  if pos > 0:
+    outfile.seek(pos, os.SEEK_SET)
+    outfile.truncate()
 
   outfile.close()
 
