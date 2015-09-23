@@ -9,9 +9,8 @@ import pymongo
 from pymongo import MongoClient
 client = MongoClient('localhost', 27017)
 
-client.drop_database('sentStore')
 db = client['sentStore']
-words = db['word-collection']
+words = db.terms
 
 #print how many lines are in file
 def lines(fp):
@@ -35,17 +34,8 @@ def getScore(word, affinDict):
   else:
     return 0
 
-#creates dictionary from AFINN text document.
-def prepDict(fp):
-  scores = {}
-  for line in fp:
-    term, score = line.split("\t") #word and sentiment score delimited by tab
-    scores[term] = int(score)
-  return scores
-
 #calculates sentiment only for known terms
 def analyzeTweets(afp, ifp, ofp):
-  affinDict = prepDict(afp)
   ofp.truncate
   for line in ifp:
     #get text. split text into tokens
