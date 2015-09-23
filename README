@@ -3,12 +3,16 @@ twitter_sentiment_analysis_python
 
 Analyze twitter data, calculate sentiment, etc. Works with live stream or twitter queries
 
+Requirements:
+MongoDB running on port 27017
 
 Included data sets:
 AFINN-111.txt   Dictionary of words with sentiment value
 output*.txt   Results of query of live twitter stream or simple twitter query. Can use to test if don't want to get your own sample data using twitterstream.py
 
+> sudo mongod
 Code files:
+[x] init.py
 [x] get_stream.py
 > Setup: set environment variables (TWITTER_API_KEY, TWITTER_API_SECRET, TWITTER_ACCESS_TOKEN_KEY, TWITTER_ACCESS_TOKEN_SECRET)
 *to run: python get_stream.py #creates and writes output to file with name prepended by timestamp
