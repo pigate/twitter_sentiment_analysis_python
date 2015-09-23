@@ -1,12 +1,17 @@
 import json
 import sys
+import pymongo
 
 #python tweet_sentiment.py AFINN-111.txt tweet_file.txt results.txt
 #writes results as sentiment rating per line in results.txt
 #must differentiate between twitter's live stream and not live stream.
 
-def hw():
-    print 'Hello, world!'
+from pymongo import MongoClient
+client = MongoClient('localhost', 27017)
+
+client.drop_database('sentStore')
+db = client['sentStore']
+words = db['word-collection']
 
 #print how many lines are in file
 def lines(fp):
@@ -15,7 +20,6 @@ def lines(fp):
 def main():
     sent_file = open(sys.argv[1])
     tweet_file = open(sys.argv[2])
-    hw()
     sent_file.seek(0)
     tweet_file.seek(0)
     results_file = open(sys.argv[3], "w")
