@@ -17,7 +17,7 @@ def prepDict(fp):
     #insert into db
     post = {"term": term,
 		"score": int(score)}
-    words.replace_one({"term":term}, post)
+    words.update({"term":term}, post, upsert=True)
 
 def main():
   if (len(sys.argv) > 1):
