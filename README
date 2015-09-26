@@ -27,16 +27,33 @@ Supervised Learning
 2. Train.
 3. Test.
 
-Filters:
-Each tweet is broken up into tokens (lowercase), and tokens less than length of 3 are discarded.
-Each tweet is mapped to a list of word features, distinct words ordered by frequency.
+Training/Initializing our classifier:
+Choose Features:
+1. Each tweet is broken up into tokens (lowercase), and tokens less than length of 3 and containing non English word characters are discarded.
+2. Each tweet is mapped to a list of word features, distinct words ordered by frequency.
+3. Calculate  P(word | + ), P(word | -)
+Discard any words that are difficult to tell if +/-
+Criteria: word is too common. assumption: common words such as 'the' and 'and' do not have clear sentiment meaning. 
+How to tell if word is something like 'the' and 'and'?
+Theory: frequency of word is high in each and P (word | + ) ~ P (word | - )
 
-Classifier:
-Extract relevant features (ignore irrelevant)
 
 Use the Naive Bayes classifier:
 Use the prior probabilty of each token with frequency of token in training set, and contribution from each feature.
 If the word 'amazing' appears in 1 of 5 of positive tweets and none of negative tweets, the likelihood that the tweet is 'positive' is multiplied by .2
+
+Actual classification:
+1. Tweet starts out with likelihood 'positive': -1.0, 'negative': -1.0 ( <- log base 2 (1/2))
+2. Add contributions from features
+(ignore words not in feature list)
+note: log base 2 again
+eg) 'pos': -6.2, 'neg' : -15.3
+3. Classify tweet as 'pos' or 'neg'. If abs('positive') > abs('negative'), classify as 'pos'
+
+Primer on Bayes Probability:
+Prior Probability: P(A), P(B)
+Conditional Probability: P(x|A), P(x|B)
+Posterior Probability: P(A|x), P(B|x)
 
 [x] tweet_sentiment.py
 *to run: python tweet_sentiment.py AFINN-111.txt tweet_file.txt result.txt*
