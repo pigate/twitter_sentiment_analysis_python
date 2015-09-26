@@ -17,25 +17,23 @@ def lines(fp):
     print str(len(fp.readlines()))
 
 def main():
-    sent_file = open(sys.argv[1])
-    tweet_file = open(sys.argv[2])
-    sent_file.seek(0)
+    tweet_file = open(sys.argv[1])
     tweet_file.seek(0)
-    results_file = open(sys.argv[3], "w")
-    analyzeTweets(sent_file, tweet_file, results_file)
-    sent_file.close()
+    results_file = open(sys.argv[2], "w")
+    analyzeTweets(tweet_file, results_file)
     tweet_file.close()
     results_file.close()
 
 #retrive score from dictionary
-def getScore(word, affinDict):
-  if word in affinDict:
-    return affinDict[word]
+def getScore(word):
+  term = words.find({"term":word})
+  if term is not null:
+    return term["score"]
   else:
     return 0
 
 #calculates sentiment only for known terms
-def analyzeTweets(afp, ifp, ofp):
+def analyzeTweets(ifp, ofp):
   ofp.truncate
   for line in ifp:
     #get text. split text into tokens

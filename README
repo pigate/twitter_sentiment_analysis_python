@@ -16,6 +16,24 @@ Code files:
 [x] get_stream.py
 > Setup: set environment variables (TWITTER_API_KEY, TWITTER_API_SECRET, TWITTER_ACCESS_TOKEN_KEY, TWITTER_ACCESS_TOKEN_SECRET)
 *to run: python get_stream.py #creates and writes output to file with name prepended by timestamp
+
+Approach:
+Supervised Learning
+1. Provide a training set of tweets that have been properly labeled with positive or negative.
+2. Train.
+3. Test.
+
+Filters:
+Each tweet is broken up into tokens, and tokens less than length of 3 are discarded.
+Each tweet is mapped to a list of word features, distinct words ordered by frequency.
+
+Classifier:
+Extract relevant features (ignore irrelevant)
+
+Use the Naive Bayes classifier:
+Use the prior probabilty of each token with frequency of token in training set, and contribution from each feature.
+If the word 'amazing' appears in 1 of 5 of positive tweets and none of negative tweets, the likelihood that the tweet is 'positive' is multiplied by .2
+
 [x] tweet_sentiment.py
 *to run: python tweet_sentiment.py AFINN-111.txt tweet_file.txt result.txt*
 [x] term_sentiment.py
