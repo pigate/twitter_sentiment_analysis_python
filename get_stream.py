@@ -51,7 +51,8 @@ def twitterreq(url, method, parameters):
 
   return response
 
-def fetchsamples(outfile):
+def fetchsamples(outfile): 
+  #url = "https://api.twitter.com/1.1/search/tweets.json?q=kanye&count=100" 
   url = "https://stream.twitter.com/1/statuses/sample.json"
   parameters = []
   response = twitterreq(url, http_method, parameters)
@@ -67,7 +68,7 @@ def fetch_timed_samples():
   p = multiprocessing.Process(target=fetchsamples, args=(outfile,))
   p.start()
 
-  p.join(5)
+  p.join(20)
   if p.is_alive():
     p.terminate()
     p.join()
@@ -85,7 +86,7 @@ def fetch_timed_samples():
   if pos > 0:
     outfile.seek(pos, os.SEEK_SET)
     outfile.truncate()
-
+  outfile.write("\n")
   outfile.close()
 
 if __name__ == '__main__':

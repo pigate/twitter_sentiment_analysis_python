@@ -1,6 +1,8 @@
+# -*- coding: utf-8 -*-
 import json
 import sys
 import pymongo
+import math
 
 #python tweet_sentiment.py AFINN-111.txt tweet_file.txt results.txt
 #writes results as sentiment rating per line in results.txt
@@ -11,6 +13,15 @@ client = MongoClient('localhost', 27017)
 
 db = client['sentStore']
 words = db.terms
+tweets = db.tweets
+
+def isEnglish(s):
+  try:
+    s.encode('ascii')
+  except UnicodeEncodeError:
+    return False
+  else:
+    return True
 
 #print how many lines are in file
 def lines(fp):
@@ -19,43 +30,71 @@ def lines(fp):
 def main():
     tweet_file = open(sys.argv[1])
     tweet_file.seek(0)
-    results_file = open(sys.argv[2], "w")
-    analyzeTweets(tweet_file, results_file)
+    analyzeTweets(tweet_file)
     tweet_file.close()
-    results_file.close()
 
 #retrive score from dictionary
 def getScore(word):
-  term = words.find({"term":word})
-  if term is not null:
+  term = words.find_one({"term":word})
+  if term is not None:
     return term["score"]
-  else:
-    return 0
 
 #calculates sentiment only for known terms
-def analyzeTweets(ifp, ofp):
-  ofp.truncate
+def analyzeTweets(ifp):
   for line in ifp:
-    #get text. split text into tokens
     bundle = json.loads(line)
-    if ("text" in bundle): #live stream data. line by line
+    if ("delete" in bundle):
+      continue
+
+    #twitter streaming format
+    if ("text" in bundle): 
       text = bundle["text"]
-      text_array = text.split(' ')
-      #acc score for tokens
-      score_array = map(lambda x: getScore(x, affinDict), text_array)
-      final_score = reduce(lambda x, y: x + y, score_array)
-      #write score into ofp
-      ofp.write(str(final_score)+'\n')
-    elif ("statuses" in bundle): #query data. one big fat collection of statuses
-      for status in bundle["statuses"]: #tweet is actually a collection of statuses
+      text_array = map(lambda y: y.lower(), text.split(' '))
+      tot_length = len(text_array)
+      text_array = filter(lambda x: len(x) >= 3 and isEnglish(x), text_array)
+
+      #ignore tweets where more than half of words are non English
+      if len(text_array) < tot_length/2:
+        continue
+
+      #calculate scores
+      score_array = filter(lambda y: y is not None, 
+		map(lambda x: getScore(x), text_array)) 
+      pos_score = reduce(lambda a, b: a + b, 
+		map(lambda y: math.log(y, 2), 
+		filter(lambda x: x > 0, score_array)), 1.0)
+      neg_score = reduce(lambda a, b: a + b, 
+		map(lambda y: math.log(-y, 2), 
+		filter(lambda x: x < 0, score_array)), 1.0) 
+
+      #insert into db
+      post = {"text": bundle["text"], "positive": pos_score, "negative": neg_score }
+      tweets.insert_one(post)
+
+    #twitter query format (non streaming): one big fat collection of statuses
+    elif ("statuses" in bundle): 
+      for status in bundle["statuses"]: 
         if ("text" in status):
           text = status["text"]
-          text_array = text.split(' ')
-          score_array = map(lambda x: getScore(x, affinDict), text_array)
-          final_score = reduce(lambda x, y: x + y, score_array)
-          ofp.write(str(final_score)+'\n')
+          text_array = filter(lambda x: len(x) >= 3 and isEnglish(x), text.split(' '))
+ 
+          #ignore tweets where more than half of words are non English
+          if len(text_array) < tot_length/2:
+            continue         
 
-        
+          #calculate scores
+          score_array = filter(lambda y: y is not None, 
+		map(lambda x: getScore(x), text_array))
+          pos_score = reduce(lambda a, b: a + b, 
+		map(lambda y: math.log(y, 2), 
+		filter(lambda x: x > 0, score_array)), 1.0)
+          neg_score = reduce(lambda a, b: a + b, 
+		map(lambda y: math.log(-y, 2), 
+		filter(lambda x: x < 0, score_array)), 1.0) 
+
+          #update db
+          post = {"text": bundle["text"], "positive": pos_score, "negative": neg_score }
+          tweets.insert_one(post)
 
 if __name__ == '__main__':
     main()

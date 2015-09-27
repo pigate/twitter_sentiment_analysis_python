@@ -21,7 +21,26 @@ Code files:
 > Setup: set environment variables (TWITTER_API_KEY, TWITTER_API_SECRET, TWITTER_ACCESS_TOKEN_KEY, TWITTER_ACCESS_TOKEN_SECRET)
 *to run: python get_stream.py #creates and writes output to file with name prepended by timestamp
 
-Approach:
+
+
+Approach 0:
+First pass 
+Using the dictionary of word-sentiments
+1. Calculate + and - log2 scores
+Each tweet starts with + = -1.0, - = -1.0
+Each distinct occurance of word in dict constributes log2(abs(score)) to either the + if is + score, or - if is - score
+2. If abs(+) > abs(-), tweet is labeled 'positive'
+
+Second pass
+For unknown interesting words, calculate a likely +/- score.
+1. Calculate likelihood that the word is in a + tweet vs - tweet using Bayes.
+2. Store results
+
+Third pass
+Recalculate ratings of tweets
+
+
+Approach 1:
 Supervised Learning
 1. Provide a training set of tweets that have been properly labeled with positive or negative.
 2. Train.
