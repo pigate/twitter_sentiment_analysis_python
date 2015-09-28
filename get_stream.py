@@ -90,7 +90,11 @@ def fetch_timed_samples():
   p = multiprocessing.Process(target=fetchsamples, args=(outfile,))
   p.start()
 
-  p.join(10)
+  if _debug:
+    p.join(5)
+  else:
+    p.join(30)
+
   if p.is_alive():
     p.terminate()
     p.join()
@@ -153,7 +157,7 @@ def analyzeTweets(ifp):
                 map(lambda y: math.log(-y, 2),
                 filter(lambda x: x < 0, score_array)), 1.0)
 
-      #insert into db
+      #record
       post_date = time.strptime(bundle['created_at'], 
 	"%a %b %d %H:%M:%S +0000 %Y")
       dt = datetime.fromtimestamp(mktime(post_date))
@@ -177,7 +181,7 @@ def analyzeTweets(ifp):
         r.rpush(parent_key, str_post)
       else:
         r.rpush(parent_key, str_post) 
-        r.expire(parent_key, 480)
+        r.expire(parent_key, 4800)
  
       #update mongodb
       tweets.insert_one(post)
