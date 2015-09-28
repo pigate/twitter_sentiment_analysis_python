@@ -176,7 +176,7 @@ def analyzeTweets(ifp):
 
       #update redis
       str_post = json.dumps(post)
-      parent_key = str(classification) + ' ' + str(dt)
+      parent_key = str(dt) + ' ' + str(classification)  
       if r.exists(parent_key): 
         r.rpush(parent_key, str_post)
       else:
