@@ -3,6 +3,9 @@ import json
 import sys
 import pymongo
 import math
+import time
+from time import mktime
+from datetime import datetime
 
 #python tweet_sentiment.py AFINN-111.txt tweet_file.txt results.txt
 #writes results as sentiment rating per line in results.txt
@@ -68,7 +71,20 @@ def analyzeTweets(ifp):
 		filter(lambda x: x < 0, score_array)), 1.0) 
 
       #insert into db
-      post = {"text": bundle["text"], "positive": pos_score, "negative": neg_score }
+      post_date = time.strptime(bundle['created_at'], "%a %b %d %H:%M:%S +0000 %Y")
+      dt = datetime.fromtimestamp(mktime(post_date))
+
+      #if pos : neg > 1.2 classify as +
+      # else if neg : pos > 1.2 classify as -
+      # else classify as neutral (undecided)
+      classification = 0
+      if pos_score/neg_score > 1.2:
+       classification = 1
+      elif neg_score/pos_score > 1.2:
+       classification = -1
+ 
+      #update db 
+      post = {"text": bundle["text"], "positive": pos_score, "negative": neg_score, "date": dt, "class": classification}
       tweets.insert_one(post)
 
     #twitter query format (non streaming): one big fat collection of statuses
@@ -91,9 +107,20 @@ def analyzeTweets(ifp):
           neg_score = reduce(lambda a, b: a + b, 
 		map(lambda y: math.log(-y, 2), 
 		filter(lambda x: x < 0, score_array)), 1.0) 
+ 
+          #if pos : neg > 1.2 classify as +
+          # else if neg : pos > 1.2 classify as -
+          # else classify as neutral (undecided)
+          classification = 0
+          if pos_score/neg_score > 1.2:
+           classification = 1
+          elif neg_score/pos_score > 1.2:
+           classification = -1
 
           #update db
-          post = {"text": bundle["text"], "positive": pos_score, "negative": neg_score }
+          post_date = time.strptime(bundle['created_at'], "%a %b %d %H:%M:%S +0000 %Y")
+          dt = datetime.fromtimestamp(mktime(post_date))
+          post = {"text": bundle["text"], "positive": pos_score, "negative": neg_score, "date": dt, "class": classification}
           tweets.insert_one(post)
 
 if __name__ == '__main__':
