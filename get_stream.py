@@ -1,8 +1,26 @@
+# -*- coding: utf-8 -*-
 import oauth2 as oauth
 import urllib2 as urllib
 import datetime
 import os
 import multiprocessing
+import json
+import sys
+import pymongo
+import math
+import time
+from time import mktime
+from datetime import datetime
+from pymongo import MongoClient
+import tw_utils
+import redis
+
+r = redis.StrictRedis(host='localhost', port = 6379, db=0)
+
+client = MongoClient('localhost', 27017)
+db = client['sentStore']
+words = db.terms
+tweets = db.tweets
 
 api_key = os.environ["TWITTER_API_KEY"]
 api_secret = os.environ["TWITTER_API_SECRET"]
@@ -59,16 +77,19 @@ def fetchsamples(outfile):
   for line in response:
     outfile.write(line.strip() + "\n")
 
-#when close process, incomplete write
+#fetches tweets from twitter api stream and writes to a new file
+#returns file name
 def fetch_timed_samples():
-  curdatetime = datetime.datetime.now()
-  fileName = str(curdatetime.year) + "_" + str(curdatetime.month) + "_" + str(curdatetime.day) + "_" + str(curdatetime.minute) + "_" + str(curdatetime.second) + "_output.txt"
+  curdatetime = datetime.now()
+  fileName = str(curdatetime.year) + "_" + str(curdatetime.month) + "_" +  \
+	str(curdatetime.day) + "_" + str(curdatetime.minute) + "_" + \
+	str(curdatetime.second) + "_output.txt"
 
   outfile = open(fileName, "w+")
   p = multiprocessing.Process(target=fetchsamples, args=(outfile,))
   p.start()
 
-  p.join(20)
+  p.join(30)
   if p.is_alive():
     p.terminate()
     p.join()
@@ -88,6 +109,68 @@ def fetch_timed_samples():
     outfile.truncate()
   outfile.write("\n")
   outfile.close()
+  return fileName
+
+def runAnalyzeTweets(fileName):
+  tweet_file = open(fileName, 'r')  
+  tweet_file.seek(0)
+  analyzeTweets(tweet_file)
+  tweet_file.close()
+
+#retrieve score from dictionary
+def getScore(word):
+  term = words.find_one({"term":word})
+  if term is not None:
+    return term["score"]
+
+#calculates sentiment only for known terms
+def analyzeTweets(ifp):
+  for line in ifp:
+    bundle = json.loads(line)
+    if ("delete" in bundle):
+      continue
+
+    #twitter streaming format
+    if ("text" in bundle):
+      text = bundle["text"]
+      text_array = map(lambda y: y.lower(), text.split(' '))
+      tot_length = len(text_array)
+      text_array = filter(lambda x: len(x) >= 3 and tw_utils.isEnglish(x), text_array)
+
+      #ignore tweets where more than half of words are non English
+      if len(text_array) < tot_length/2:
+        continue
+
+      #calculate scores
+      score_array = filter(lambda y: y is not None,
+                map(lambda x: getScore(x), text_array))
+      pos_score = reduce(lambda a, b: a + b,
+                map(lambda y: math.log(y, 2),
+                filter(lambda x: x > 0, score_array)), 1.0)
+      neg_score = reduce(lambda a, b: a + b,
+                map(lambda y: math.log(-y, 2),
+                filter(lambda x: x < 0, score_array)), 1.0)
+
+      #insert into db
+      post_date = time.strptime(bundle['created_at'], 
+	"%a %b %d %H:%M:%S +0000 %Y")
+      dt = datetime.fromtimestamp(mktime(post_date))
+
+      #if pos : neg > 1.2 classify as +
+      # else if neg : pos > 1.2 classify as -
+      # else classify as neutral (undecided)
+      classification = 0
+      if pos_score/neg_score > 1.2:
+       classification = 1
+      elif neg_score/pos_score > 1.2:
+       classification = -1
+
+      #update db
+      post = {"text": bundle["text"], "positive": pos_score, 
+	"negative": neg_score, "date": dt, "class": classification}
+      tweets.insert_one(post)
+
 
 if __name__ == '__main__':
-  fetch_timed_samples()
+  fileName = fetch_timed_samples()
+  runAnalyzeTweets(fileName) 
