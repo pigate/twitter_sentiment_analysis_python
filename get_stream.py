@@ -16,6 +16,7 @@ import tw_utils
 import redis
 
 r = redis.StrictRedis(host='localhost', port = 6379, db=0)
+pipe = r.pipeline()
 
 client = MongoClient('localhost', 27017)
 db = client['sentStore']
@@ -89,7 +90,7 @@ def fetch_timed_samples():
   p = multiprocessing.Process(target=fetchsamples, args=(outfile,))
   p.start()
 
-  p.join(30)
+  p.join(10)
   if p.is_alive():
     p.terminate()
     p.join()
@@ -135,7 +136,8 @@ def analyzeTweets(ifp):
       text = bundle["text"]
       text_array = map(lambda y: y.lower(), text.split(' '))
       tot_length = len(text_array)
-      text_array = filter(lambda x: len(x) >= 3 and tw_utils.isEnglish(x), text_array)
+      text_array = filter(lambda x: len(x) >= 3 and tw_utils.isEnglish(x), 
+	text_array)
 
       #ignore tweets where more than half of words are non English
       if len(text_array) < tot_length/2:
@@ -165,11 +167,22 @@ def analyzeTweets(ifp):
       elif neg_score/pos_score > 1.2:
        classification = -1
 
-      #update db
       post = {"text": bundle["text"], "positive": pos_score, 
-	"negative": neg_score, "date": dt, "class": classification}
-      tweets.insert_one(post)
+	"negative": neg_score, "date": str(dt), "class": classification}
 
+      #update redis
+      str_post = json.dumps(post)
+      parent_key = str(classification) + ' ' + str(dt)
+      if r.exists(parent_key): 
+        r.rpush(parent_key, str_post)
+      else:
+        r.rpush(parent_key, str_post) 
+        r.expire(parent_key, 480)
+ 
+      #update mongodb
+      tweets.insert_one(post)
+      
+  pipe.execute()
 
 if __name__ == '__main__':
   fileName = fetch_timed_samples()
