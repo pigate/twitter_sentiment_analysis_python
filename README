@@ -8,6 +8,7 @@ DataSet: Tweets from twitter stream
 
 Requirements:
 MongoDB running on port 27017
+Redis on 6739
 API keys from Twitter
 
 Included data sets:
